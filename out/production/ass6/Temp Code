@@ -1,0 +1,162 @@
+# the first version of the moveOneStep in ball
+
+        //check the right
+        if (this.getX() + this.getSize() >= width + addX) {
+            this.center.setX(addX + width - this.getSize() - 1);
+            this.setVelocity(-this.v.getDx(), this.v.getDy());
+        }
+        //check the left
+        if (this.getX() - this.getSize() <= addX) {
+            this.center.setX(addX + this.getSize() + 1);
+            this.setVelocity(-this.v.getDx(), this.v.getDy());
+        }
+        //check the top
+        if (this.getY() - this.getSize() <= addY) {
+            this.center.setY(addY + this.getSize() + 1);
+            this.setVelocity(this.v.getDx(), -this.v.getDy());
+        }
+        //check the bottom
+        if (this.getY() + this.getSize() >= height + addY) {
+            this.center.setY(addY + height - this.getSize() - 1);
+            this.setVelocity(this.v.getDx(), -this.v.getDy());
+        }
+
+#hit function in paddle
+
+
+        //get the width of every region of the paddle
+        double regionLength = this.rec.getWidth() / 5;
+        double paddleColl = collisionPoint.getX() - this.rec.getUpperLeft().getX();
+        //get the speed of the ball according to the dx and the dy values
+        double speed = Math.sqrt((Math.pow(currentVelocity.getDx(), 2) + Math.pow(currentVelocity.getDy(), 2)));
+        //check which region of the paddle the ball hit and change the position,velocity of the ball accordingly
+        System.out.println(paddleColl);
+        this.rec.getUpperLeft().showPoint();
+        if (paddleColl >= 0 && paddleColl < regionLength) {
+            System.out.println("region 1!");
+            return Velocity.fromAngleAndSpeed(300, speed);
+        } else if (paddleColl >= regionLength && paddleColl < 2 * regionLength) {
+            System.out.println("region 2!");
+            return Velocity.fromAngleAndSpeed(330, speed);
+        } else if (paddleColl >= regionLength * 2 && regionLength < 3 * regionLength) {
+            System.out.println("region 3!");
+            return new Velocity(currentVelocity.getDx(), -currentVelocity.getDy());
+        } else if (paddleColl >= regionLength * 3 && regionLength < 4 * regionLength) {
+            System.out.println("region 4!");
+            return Velocity.fromAngleAndSpeed(30, speed);
+        }
+        System.out.println("region 5!");
+        return Velocity.fromAngleAndSpeed(60, speed);
+
+
+#initialize function of ass3
+
+
+        setGui(new GUI("ass3game", 800, 600));
+        //create the edge blocks and add them to the game
+        double edgeBlockWidth = 30;
+        Block b = new Block(new Rectangle(new Point(0, 0), 800, 30, Color.GRAY));
+        b.addToGame(this);
+        b = new Block(new Rectangle(new Point(0, 30), 30, 570, Color.GRAY));
+        b.addToGame(this);
+        b = new Block(new Rectangle(new Point(770, 30), 30, 570, Color.GRAY));
+        b.addToGame(this);
+        b = new Block(new Rectangle(new Point(30, 570), 740, 30, Color.GRAY));
+        b.addToGame(this);
+        //create the blocks and add them to the game
+        Color[] colors = {Color.GREEN, Color.YELLOW, Color.RED, Color.CYAN, Color.GRAY, Color.ORANGE};
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 12 - i; j++) {
+                Point p = new Point(800 - edgeBlockWidth - 40 * (j + 1), 200 + 20 * i);
+                b = new Block(new Rectangle(p, 40, 20, colors[i]));
+                b.addToGame(this);
+            }
+        }
+        //create the paddle and add him to the game
+        Rectangle rec = new Rectangle(new Point(100, 550), 100, 20, Color.YELLOW);
+        Paddle paddle = new Paddle(this.gui, rec, edgeBlockWidth);
+        paddle.addToGame(this);
+        //create the balls and add him to the game
+        Ball b1 = new Ball(new Point(170, 400), 3, Color.BLACK);
+        Ball b2 = new Ball(new Point(50, 500), 3, Color.BLACK);
+        b1.setVelocity(2, 2);
+        b2.setVelocity(6.5, 1.5);
+        b1.setGe(this.environment);
+        b2.setGe(this.environment);
+        b1.addToGame(this);
+        b2.addToGame(this);
+
+
+
+# init code
+        setGui(new GUI("ass3game", 800, 600));
+        BlockRemover br = new BlockRemover(this, new Counter());
+        BallRemover ballRemover = new BallRemover(this, new Counter());
+        //create the edge blocks and add them to the game
+        double edgeBlockWidth = 30;
+        Block b = new Block(new Rectangle(new Point(0, 0), 800, 30, Color.GRAY));
+        b.setHitListeners(new ArrayList<HitListener>());
+        b.addToGame(this);
+        b = new Block(new Rectangle(new Point(0, 30), 30, 570, Color.GRAY));
+        b.setHitListeners(new ArrayList<HitListener>());
+        b.addToGame(this);
+        b = new Block(new Rectangle(new Point(770, 30), 30, 570, Color.GRAY));
+        b.setHitListeners(new ArrayList<HitListener>());
+        b.addToGame(this);
+        b = new Block(new Rectangle(new Point(0, 600), 800, 10, Color.GRAY));
+        b.setHitListeners(new ArrayList<HitListener>());
+        b.addHitListener(ballRemover);
+        b.addToGame(this);
+        //create the blocks and add them to the game
+        Color[] colors = {Color.GREEN, Color.YELLOW, Color.RED, Color.CYAN, Color.GRAY, Color.ORANGE};
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 12 - i; j++) {
+                Point p = new Point(800 - edgeBlockWidth - 40 * (j + 1), 200 + 20 * i);
+                b = new Block(new Rectangle(p, 40, 20, colors[i]));
+                br.getRemainingBlocks().increase(1);
+                b.setHitListeners(new ArrayList<HitListener>());
+                b.addHitListener(br);
+                b.addToGame(this);
+            }
+        }
+        this.remainingBlocks = br.getRemainingBlocks();
+        this.remainingBalls = ballRemover.getRemainingBalls();
+        this.remainingBalls.increase(2);
+
+        //create the paddle and add him to the game
+        Rectangle rec = new Rectangle(new Point(100, 550), 100, 20, Color.YELLOW);
+        Paddle paddle = new Paddle(this.gui, rec, edgeBlockWidth);
+        paddle.addToGame(this);
+        //create the balls and add him to the game
+        Ball b1 = new Ball(new Point(150, 400), 3, Color.BLACK);
+        Ball b2 = new Ball(new Point(50, 500), 3, Color.BLACK);
+        b1.setVelocity(8, -10);
+        b2.setVelocity(6.5, 1.5);
+        b1.setGe(this.environment);
+        b2.setGe(this.environment);
+        b1.addToGame(this);
+        b2.addToGame(this);
+
+# loop that creates 20 balls and add them to the game - put the code in "init" function
+        for (int i = 0; i < 20; i++){
+            Ball ball = new Ball(new Point(50 + 20 * i, 100), 3, Color.BLACK);
+            ball.setVelocity(4, -2);
+            ball.setGe(this.environment);
+            ball.addToGame(this);
+        }
+
+
+#create blocks for ass5
+        //create the blocks and add them to the game
+        /*Color[] colors = {Color.GREEN, Color.YELLOW, Color.RED, Color.CYAN, Color.GRAY, Color.ORANGE};
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 12 - i; j++) {
+                Point p = new Point(800 - edgeBlockWidth - 40 * (j + 1), 200 + 20 * i);
+                b = new Block(new Rectangle(p, 40, 20, colors[i]));
+                br.getRemainingBlocks().increase(1);
+                b.setHitListeners(new ArrayList<HitListener>());
+                b.addHitListener(br);
+                b.addHitListener(scl);
+                b.addToGame(this);
+            }
+        }*/
